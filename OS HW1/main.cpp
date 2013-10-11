@@ -186,14 +186,10 @@ void requests(int *parentPipes, int procID, process process1)
             }
             myfile.close();
 
-            ostringstream convert;
-
-            convert << process1.deadline[procID];
-            string itos = convert.str();
-
             int buffer_sz = 20;
             char buffer[buffer_sz];
-            snprintf(buffer ,buffer_sz, "%d,%d", process1.deadline[procID], process1.computationTime[procID]);
+            //cout<<process1.computationTime[procID]<<endl;
+            snprintf(buffer ,buffer_sz, "%d,%d" , process1.deadline[procID], process1.computationTime[procID]);
 
             write(parentPipes[1], buffer, buffer_sz);
 
@@ -207,6 +203,7 @@ void getInfo(process process, int **childPipes)
 
     char buffer[20];
     int deadlineFC;
+    int computationFC;
     for(int i = 1; i<process.numProcess+1; i++)
     {
         write(childPipes[i][1], "i", 20);
@@ -214,8 +211,10 @@ void getInfo(process process, int **childPipes)
         read(childPipes[i][0], buffer, 20);
 
         deadlineFC = atoi(buffer);
-
-        cout<<deadlineFC<<endl;
+        computationFC = atoi(strchr(buffer, ',')+1);
+        
+        //cout<<deadlineFC<<endl;
+        //cout<<computationFC<<endl;
     }
 }
 
