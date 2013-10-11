@@ -14,6 +14,7 @@
 #include <fstream>
 #include <sstream>
 #include <stdlib.h>
+#include <cstring>
 
 using namespace std;
 
