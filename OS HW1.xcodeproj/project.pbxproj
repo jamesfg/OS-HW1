@@ -73,8 +73,8 @@
 			isa = PBXGroup;
 			children = (
 				9D51672017FDEFE50002626A /* main.cpp */,
-				9D51672217FDEFE50002626A /* OS_HW1.1 */,
 				9DF15D4218028F39002C082D /* input.txt */,
+				9D51672217FDEFE50002626A /* OS_HW1.1 */,
 			);
 			path = "OS HW1";
 			sourceTree = "<group>";

@@ -248,13 +248,20 @@ void manager(process process, int **childPipes, string schedule)
                 return;
             }
             
-            char request[20];
+            for(int resCount = 1; resCount<process.computationTime[next]; resCount++)
+            {
+                char request[20];
+                //size_t readSize = read(childPipes[next][0], request, 20);
+
+                read(childPipes[next][0], request, 20);
+
+                cout<<request<<endl;
+            }
             
-            size_t readSize = read(childPipes[next][0], request, 20);
             
-            cout<<request<<endl;
             
-            cout<<"i am the smallest process at process "<<next<<endl;
+            
+            cout<<"Smallest process at process "<<next<<endl;
             process.computationTime[next]=0;
         }
         else if(schedule == "llf" || schedule == "LLF")
@@ -269,6 +276,12 @@ void manager(process process, int **childPipes, string schedule)
             cout<<"i am the smallest process at process "<<next<<endl;
             process.computationTime[next]=0;
             process.deadline[next] = 0;
+        }
+        else
+        {
+            cout<<"Not a valid schedule"<<endl;
+            cout<<"Exiting....."<<endl;
+            exit(0);
         }
     }
 }
