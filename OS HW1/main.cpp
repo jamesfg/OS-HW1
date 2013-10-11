@@ -193,7 +193,7 @@ void requests(int *parentPipes, int procID, process process1)
 
             int buffer_sz = 20;
             char buffer[buffer_sz];
-            snprintf(buffer ,buffer_sz, "%d", process1.deadline[procID]);
+            snprintf(buffer ,buffer_sz, "%d,%d", process1.deadline[procID], process1.computationTime[procID]);
 
             write(parentPipes[1], buffer, buffer_sz);
 
@@ -205,13 +205,13 @@ void requests(int *parentPipes, int procID, process process1)
 void getInfo(process process, int **childPipes)
 {
 
-    char buffer[2];
+    char buffer[20];
     int deadlineFC;
     for(int i = 1; i<process.numProcess+1; i++)
     {
-        write(childPipes[i][1], "i", 2);
+        write(childPipes[i][1], "i", 20);
         cout<<"read child pipes"<<endl;
-        read(childPipes[i][0], buffer,2);
+        read(childPipes[i][0], buffer, 20);
 
         deadlineFC = atoi(buffer);
 
