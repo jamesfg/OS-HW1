@@ -28,7 +28,7 @@ struct process
     int *computationTime; //computation time for numProcess
     int **allocated;
     int **need;
-    int **requestType;
+    int **requestType; //1 for request | 0 for release
     string **request;
 };
 
@@ -233,6 +233,49 @@ int getnextProcLLF(process process)
     return smallestID;
 }
 
+int bankers(process process, int next, int requestType, string request)
+{
+    
+    
+    request = request.substr(1);
+    int requestVector[process.numResource];
+    //converst string to usable integers
+    //cout<<requestType<<",";
+    for(int m = 1; m<process.numResource+1; m++)
+    {    
+        requestVector[m] = atoi (request.c_str());
+        
+        //cout<<requestVector[m]<<",";
+        
+        request = request.substr(request.find(",")+1);
+    }
+    cout<<endl;
+    
+    
+    cout<<"bankers algorithm for process "<<next<<" for ";
+    
+   
+        if (requestType == 1)
+        {
+            cout<<" request(";
+            for(int m = 1; m<process.numResource+1; m++)
+            {
+                cout<<requestVector[m]<<",";
+            }
+            cout<<")"<<endl;
+        }
+        else if(requestType == 0)
+        {
+            cout<<" release(";
+            for(int m = 1; m<process.numResource+1; m++)
+            {
+                cout<<requestVector[m]<<",";
+            }
+            cout<<")"<<endl;
+        }
+       return 0;
+}
+
 void manager(process process, int **childPipes, string schedule)
 {
     printf("parent\n");
@@ -247,33 +290,48 @@ void manager(process process, int **childPipes, string schedule)
             {
                 return;
             }
-            
+            //cout<<"Smallest process at "<<next<<endl;
+            //loop through request from child
             for(int resCount = 1; resCount<process.computationTime[next]+1; resCount++)
             {
                 char request[20];
                 //size_t readSize = read(childPipes[next][0], request, 20);
 
                 read(childPipes[next][0], request, 20);
-
-                cout<<request<<endl;
+                process.requestType[next][resCount] = atoi(request);
+                //cout<<request<<endl;
+                //cout<<process.requestType[next][resCount]<<",";
+                process.request[next][resCount] = strchr(request, ',')+1;
+                //cout<<process.request[next][resCount];
+                //cout<<endl;
+                bankers(process, next, process.requestType[next][resCount], process.request[next][resCount]);
             }
-            
-            
-            
-            
-            cout<<"Smallest process at process "<<next<<endl;
             process.computationTime[next]=0;
         }
         else if(schedule == "llf" || schedule == "LLF")
         {
             int next = getnextProcLLF(process);
-        
+            
             if( next == -1 )
             {
                 return;
             }
-        
-            cout<<"i am the smallest process at process "<<next<<endl;
+            //cout<<"Smallest process at "<<next<<endl;
+            //loop through request from child
+            for(int resCount = 1; resCount<process.computationTime[next]+1; resCount++)
+            {
+                char request[20];
+                //size_t readSize = read(childPipes[next][0], request, 20);
+                
+                read(childPipes[next][0], request, 20);
+                process.requestType[next][resCount] = atoi(request);
+                //cout<<request<<endl;
+                //cout<<process.requestType[next][resCount]<<",";
+                process.request[next][resCount] = strchr(request, ',')+1;
+                //cout<<process.request[next][resCount];
+                //cout<<endl;
+                bankers(process, next, process.requestType[next][resCount], process.request[next][resCount]);
+            }
             process.computationTime[next]=0;
             process.deadline[next] = 0;
         }
