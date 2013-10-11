@@ -134,24 +134,13 @@ void requests(int *parentPipes, int procID, process process1)
                                     //cout<<"request"<<maxLine<<endl;
                                     process1.requestType[requestIter] = 1;
                                     requestIter++;
+                                    
+//                                    //write request to parent
+//                                    int buffer_sz = 128;
+//                                    char buffer[buffer_sz];
+//                                    snprintf(buffer ,buffer_sz, "%c,%s" , 'q', maxLine.c_str());
+//                                    write(parentPipes[1], buffer, buffer_sz);
 
-                                    maxLine = maxLine.substr(1);
-                                    //cout<<procID<<" has ";
-                                    //cout<<"request(";
-                                    //loop through request vector | find numbers
-                                    for(int rvLoop = 1; rvLoop<process1.numResource+1; rvLoop++)
-                                    {
-                                        char * buffer = new char [maxLine.length()+1];
-                                        strcpy (buffer, maxLine.c_str());
-                                        int requestVector;
-                                        requestVector = atoi (buffer);
-
-                                        //cout<<requestVector<<",";
-
-                                        maxLine = maxLine.substr(maxLine.find(",")+1);
-                                        delete[] buffer;
-                                    }
-                                    //cout<<")"<<endl;
                                 }
                                 else if (checkType == "release")
                                 {
@@ -159,24 +148,12 @@ void requests(int *parentPipes, int procID, process process1)
                                     //cout<<"release"<<maxLine<<endl;
                                     process1.requestType[requestIter] = 0;
                                     requestIter++;
-
-                                    maxLine = maxLine.substr(1);
-                                    //loop through request vector | find numbers
-                                    //cout<<procID<<" has ";
-                                    //cout<<"release(";
-                                    for(int rvLoop = 1; rvLoop<process1.numResource+1; rvLoop++)
-                                    {
-                                        char * buffer = new char [maxLine.length()+1];
-                                        strcpy (buffer, maxLine.c_str());
-                                        int requestVector;
-                                        requestVector = atoi (buffer);
-
-                                        //cout<<requestVector<<",";
-
-                                        maxLine = maxLine.substr(maxLine.find(",")+1);
-                                        delete[] buffer;
-                                    }
-                                    //cout<<")"<<endl;
+                                    
+//                                    //write release to parent
+//                                    int buffer_sz = 128;
+//                                    char buffer[buffer_sz];
+//                                    snprintf(buffer ,buffer_sz, "%c,%s" , 'l', maxLine.c_str());
+//                                    write(parentPipes[1], buffer, buffer_sz);
                                 }
                                 else cout<<"This is neither a request nor a release"<<endl;
                             }
@@ -207,82 +184,104 @@ void getInfo(process process, int **childPipes)
     for(int i = 1; i<process.numProcess+1; i++)
     {
         write(childPipes[i][1], "i", 20);
-        //cout<<"read child pipes"<<endl;
         read(childPipes[i][0], buffer, 20);
-
+        
         deadlineFC = atoi(buffer);
         computationFC = atoi(strchr(buffer, ',')+1);
         
         process.deadline[i] = deadlineFC;
         process.computationTime[i] = computationFC;
-        
-        //cout<<deadlineFC<<endl;
-        //cout<<computationFC<<endl;
-        //cout<<process.deadline[i]<<endl;
-        //cout<<process.computationTime[i]<<endl;
     }
 }
 
 
-int getNextProc(process process)
+int getNextProcSFJ(process process)
 {
     
     int smallestID = -1;
     int smallest = 10000;
-    cout << "comptime: ";
     for(int i = 1; i<process.numProcess+1; i++)
     {
-        cout << process.computationTime[i] << " ";
         if(process.computationTime[i]<=0)
         {
             continue;
         }
-        //cout<<process.deadline[i]<<endl;
-        if(smallest>process.computationTime[i])
+        else if(smallest>process.computationTime[i])
         {
-            //cout<<i<<endl;
             smallest = process.computationTime[i];
             smallestID = i;
-            process.computationTime[i]=0;
-            //cout<<smallest<<endl;
         }
     }
-    cout<<endl;
-    //cout<<smallestID<<endl;
     return smallestID;
 }
 
-void sfj(process process)
+int getnextProcLLF(process process)
 {
-    
+    int smallestID = -1;
+    int smallest = 1000;
+    for(int i=1; i<process.numProcess+1; i++)
+    {
+        int laxity = process.deadline[i]-process.computationTime[i];
+        if(laxity<=0)
+        {
+            continue;
+        }
+        else if(smallest>laxity)
+        {
+            smallest = laxity;
+            smallestID = i;
+        }
+    }
+    return smallestID;
 }
 
-void manager(process process, int **childPipes)
+void manager(process process, int **childPipes, string schedule)
 {
     printf("parent\n");
     getInfo(process, childPipes);
     while(true)
     {
-        int next = getNextProc(process);
-        cout<<next<<endl;
+        if(schedule == "sjf" || schedule == "SJF")
+        {
+            int next = getNextProcSFJ(process);
+            
+            if( next == -1 )
+            {
+                return;
+            }
+            
+            //char request[128];
+            
+            //size_t readSize = read(childPipes[next][0], request, 128);
+            
+            //cout<<request<<endl;
+            
+            cout<<"i am the smallest process at process "<<next<<endl;
+            process.computationTime[next]=0;
+        }
+        else if(schedule == "llf" || schedule == "LLF")
+        {
+            int next = getnextProcLLF(process);
         
-        if( next == -1 ) {
-			return;
-		}
+            if( next == -1 )
+            {
+                return;
+            }
+        
+            cout<<"i am the smallest process at process "<<next<<endl;
+            process.computationTime[next]=0;
+            process.deadline[next] = 0;
+        }
     }
 }
-
-
-
-void getNextProcess(process process, int **childPipes)
-{
-    //
-}
-
 
 int main(int argc, const char * argv[])
 {
     process process1;
+    
+    string schedule;
+    cout<<"enter sjf or llf:";
+    cin>>schedule;
 
     /* READ FILE */
     ifstream myfile ("input.txt");
@@ -359,8 +358,8 @@ int main(int argc, const char * argv[])
 
     //allocate memory for pipes | childPipes | parentPipes
     int **pipes = new int*[process1.numProcess+1];
-    int **childPipes = new int*[process1.numProcess+1]; // write to child | read from child
-    int *parentPipes = new int[2]; // write to parent | read from parent
+    int **childPipes = new int*[process1.numProcess+1]; // read from child | write to child
+    int *parentPipes = new int[2]; // read from parent | write to parent
 
     for(int i = 0; i< process1.numProcess+1; i++)
     {
@@ -376,7 +375,7 @@ int main(int argc, const char * argv[])
     }
     else
     {
-        manager(process1, childPipes);
+        manager(process1, childPipes, schedule);
     }
 }
 
