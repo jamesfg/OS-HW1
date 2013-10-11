@@ -28,7 +28,8 @@ struct process
     int *computationTime; //computation time for numProcess
     int **allocated;
     int **need;
-    int *requestType;
+    int **requestType;
+    string **request;
 };
 
 
@@ -122,7 +123,6 @@ void requests(int *parentPipes, int procID, process process1)
 
                             for(int ctLoop = 1; ctLoop<process1.computationTime[procID]+1; ctLoop++)
                             {
-                                int requestIter = 1;
                                 string maxLine;
                                 string checkType;
                                 //parse out maximum demand for resource m by process n into max[][]
@@ -132,30 +132,23 @@ void requests(int *parentPipes, int procID, process process1)
                                 {
                                     maxLine = maxLine.substr(7);
                                     //cout<<"request"<<maxLine<<endl;
-                                    process1.requestType[requestIter] = 1;
-                                    requestIter++;
-                                    
-//                                    //write request to parent
-//                                    int buffer_sz = 128;
-//                                    char buffer[buffer_sz];
-//                                    snprintf(buffer ,buffer_sz, "%c,%s" , 'q', maxLine.c_str());
-//                                    write(parentPipes[1], buffer, buffer_sz);
-
+                                    process1.requestType[procID][ctLoop] = 1;
+                                    //cout<<"request 1="<<process1.requestType[procID][ctLoop]<<endl;
+                                    process1.request[procID][ctLoop] = maxLine;
+                                    //cout<<"request["<<procID<<"]["<<ctLoop<<"]= "<<process1.request[procID][ctLoop]<<endl;
                                 }
                                 else if (checkType == "release")
                                 {
                                     maxLine = maxLine.substr(7);
                                     //cout<<"release"<<maxLine<<endl;
-                                    process1.requestType[requestIter] = 0;
-                                    requestIter++;
-                                    
-//                                    //write release to parent
-//                                    int buffer_sz = 128;
-//                                    char buffer[buffer_sz];
-//                                    snprintf(buffer ,buffer_sz, "%c,%s" , 'l', maxLine.c_str());
-//                                    write(parentPipes[1], buffer, buffer_sz);
+                                    process1.requestType[procID][ctLoop] = 0;
+                                    //cout<<"release 0="<<process1.requestType[procID][ctLoop]<<endl;
+                                    process1.request[procID][ctLoop] = maxLine;
+                                    //cout<<"request["<<procID<<"]["<<ctLoop<<"]= "<<process1.request[procID][ctLoop]<<endl;
                                 }
                                 else cout<<"This is neither a request nor a release"<<endl;
+                                
+                                
                             }
                         }
                     }
@@ -167,8 +160,13 @@ void requests(int *parentPipes, int procID, process process1)
             char buffer[buffer_sz];
             //cout<<process1.computationTime[procID]<<endl;
             snprintf(buffer ,buffer_sz, "%d,%d" , process1.deadline[procID], process1.computationTime[procID]);
-
             write(parentPipes[1], buffer, buffer_sz);
+            
+            for(int ctLoop = 1; ctLoop<process1.computationTime[procID]+1; ctLoop++)
+            {
+                snprintf(buffer, buffer_sz,  "%d,%s" , process1.requestType[procID][ctLoop], process1.request[procID][ctLoop].c_str());
+                write(parentPipes[1], buffer, buffer_sz);
+            }
 
             /* END OF READ FILE */
         }
@@ -250,11 +248,11 @@ void manager(process process, int **childPipes, string schedule)
                 return;
             }
             
-            //char request[128];
+            char request[20];
             
-            //size_t readSize = read(childPipes[next][0], request, 128);
+            size_t readSize = read(childPipes[next][0], request, 20);
             
-            //cout<<request<<endl;
+            cout<<request<<endl;
             
             cout<<"i am the smallest process at process "<<next<<endl;
             process.computationTime[next]=0;
@@ -349,7 +347,15 @@ int main(int argc, const char * argv[])
         process1.deadline = new int[process1.numProcess];
         //allocate memory for computationTime
         process1.computationTime = new int[process1.numProcess];
-        process1.requestType = new int[500];
+       
+        process1.requestType = new int*[process1.numResource+1];
+        process1.request = new string*[process1.numResource+1];
+        for(int i =0; i<process1.numResource+1; i++)
+        {
+            process1.requestType[i] = new int(process1.numProcess+1);
+            process1.request[i] = new string[process1.numProcess+1];
+        }
+        
     }
     else cout << "Unable to open file\n";
     myfile.close();
