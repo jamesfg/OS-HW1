@@ -223,33 +223,53 @@ void getInfo(process process, int **childPipes)
     }
 }
 
-void sfj(process process)
+
+int getNextProc(process process)
 {
-    int smallestID = 0;
+    
+    int smallestID = -1;
     int smallest = 10000;
+    cout << "comptime: ";
     for(int i = 1; i<process.numProcess+1; i++)
     {
-        //cout<<process.deadline[i]<<endl;
-        if(smallest>process.deadline[i])
+        cout << process.computationTime[i] << " ";
+        if(process.computationTime[i]<=0)
         {
-            smallest = process.deadline[i];
+            continue;
+        }
+        //cout<<process.deadline[i]<<endl;
+        if(smallest>process.computationTime[i])
+        {
+            //cout<<i<<endl;
+            smallest = process.computationTime[i];
             smallestID = i;
+            process.computationTime[i]=0;
             //cout<<smallest<<endl;
         }
     }
-    cout<<smallestID<<endl;
+    cout<<endl;
+    //cout<<smallestID<<endl;
+    return smallestID;
+}
+
+void sfj(process process)
+{
+    
 }
 
 void manager(process process, int **childPipes)
 {
     printf("parent\n");
     getInfo(process, childPipes);
-    sfj(process);
-    
-//    while(true)
-//    {
-
-//    }
+    while(true)
+    {
+        int next = getNextProc(process);
+        cout<<next<<endl;
+        
+        if( next == -1 ) {
+			return;
+		}
+    }
 }
 
 
