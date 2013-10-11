@@ -207,21 +207,45 @@ void getInfo(process process, int **childPipes)
     for(int i = 1; i<process.numProcess+1; i++)
     {
         write(childPipes[i][1], "i", 20);
-        cout<<"read child pipes"<<endl;
+        //cout<<"read child pipes"<<endl;
         read(childPipes[i][0], buffer, 20);
 
         deadlineFC = atoi(buffer);
         computationFC = atoi(strchr(buffer, ',')+1);
         
+        process.deadline[i] = deadlineFC;
+        process.computationTime[i] = computationFC;
+        
         //cout<<deadlineFC<<endl;
         //cout<<computationFC<<endl;
+        //cout<<process.deadline[i]<<endl;
+        //cout<<process.computationTime[i]<<endl;
     }
+}
+
+void sfj(process process)
+{
+    int smallestID = 0;
+    int smallest = 10000;
+    for(int i = 1; i<process.numProcess+1; i++)
+    {
+        //cout<<process.deadline[i]<<endl;
+        if(smallest>process.deadline[i])
+        {
+            smallest = process.deadline[i];
+            smallestID = i;
+            //cout<<smallest<<endl;
+        }
+    }
+    cout<<smallestID<<endl;
 }
 
 void manager(process process, int **childPipes)
 {
     printf("parent\n");
     getInfo(process, childPipes);
+    sfj(process);
+    
 //    while(true)
 //    {
 
