@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		9D51672117FDEFE50002626A /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9D51672017FDEFE50002626A /* main.cpp */; };
 		9D51672317FDEFE50002626A /* OS_HW1.1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = 9D51672217FDEFE50002626A /* OS_HW1.1 */; };
+		9DF15D4418029232002C082D /* input.txt in CopyFiles */ = {isa = PBXBuildFile; fileRef = 9DF15D4218028F39002C082D /* input.txt */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -22,12 +23,23 @@
 			);
 			runOnlyForDeploymentPostprocessing = 1;
 		};
+		9DF15D4318029215002C082D /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 7;
+			files = (
+				9DF15D4418029232002C082D /* input.txt in CopyFiles */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		9D51671D17FDEFE50002626A /* OS HW1 */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "OS HW1"; sourceTree = BUILT_PRODUCTS_DIR; };
 		9D51672017FDEFE50002626A /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		9D51672217FDEFE50002626A /* OS_HW1.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = OS_HW1.1; sourceTree = "<group>"; };
+		9DF15D4218028F39002C082D /* input.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = input.txt; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -62,6 +74,7 @@
 			children = (
 				9D51672017FDEFE50002626A /* main.cpp */,
 				9D51672217FDEFE50002626A /* OS_HW1.1 */,
+				9DF15D4218028F39002C082D /* input.txt */,
 			);
 			path = "OS HW1";
 			sourceTree = "<group>";
@@ -76,6 +89,7 @@
 				9D51671917FDEFE50002626A /* Sources */,
 				9D51671A17FDEFE50002626A /* Frameworks */,
 				9D51671B17FDEFE50002626A /* CopyFiles */,
+				9DF15D4318029215002C082D /* CopyFiles */,
 			);
 			buildRules = (
 			);
@@ -216,6 +230,7 @@
 				9D51672817FDEFE50002626A /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
