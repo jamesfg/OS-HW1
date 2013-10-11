@@ -86,11 +86,6 @@ void requests(int *parentPipes, int procID, process process1)
         //printf("%d\n", readSize);
         if(buffer[0] == 'i' )
         {
-
-
-            //printf("request from process ");
-            //cout<<procID<<endl;
-
             string maxLine;
             int findProcID = 0;
 
@@ -108,18 +103,14 @@ void requests(int *parentPipes, int procID, process process1)
                         tempProcID = atoi (maxLine.c_str());
                         if(procID == tempProcID)
                         {
-                            //cout<<"process id is "<<tempProcID<<endl;
                             findProcID = 1;
                             int tempStringToInt;
                             getline(myfile,maxLine);
                             stringstream(maxLine) >> tempStringToInt;
                             process1.deadline[procID] = tempStringToInt;
-                            //cout<<"process1.deadline["<<procID<<"]="<<process1.deadline[procID]<<endl;
                             getline(myfile,maxLine);
                             stringstream(maxLine) >> tempStringToInt;
                             process1.computationTime[procID] = tempStringToInt;
-                            //cout<<"process1.computationTime["<<procID<<"]="<<process1.computationTime[procID]<<endl;
-
 
                             for(int ctLoop = 1; ctLoop<process1.computationTime[procID]+1; ctLoop++)
                             {
@@ -131,20 +122,14 @@ void requests(int *parentPipes, int procID, process process1)
                                 if(checkType == "request")
                                 {
                                     maxLine = maxLine.substr(7);
-                                    //cout<<"request"<<maxLine<<endl;
                                     process1.requestType[procID][ctLoop] = 1;
-                                    //cout<<"request 1="<<process1.requestType[procID][ctLoop]<<endl;
                                     process1.request[procID][ctLoop] = maxLine;
-                                    //cout<<"request["<<procID<<"]["<<ctLoop<<"]= "<<process1.request[procID][ctLoop]<<endl;
                                 }
                                 else if (checkType == "release")
                                 {
                                     maxLine = maxLine.substr(7);
-                                    //cout<<"release"<<maxLine<<endl;
                                     process1.requestType[procID][ctLoop] = 0;
-                                    //cout<<"release 0="<<process1.requestType[procID][ctLoop]<<endl;
                                     process1.request[procID][ctLoop] = maxLine;
-                                    //cout<<"request["<<procID<<"]["<<ctLoop<<"]= "<<process1.request[procID][ctLoop]<<endl;
                                 }
                                 else cout<<"This is neither a request nor a release"<<endl;
                                 
@@ -158,7 +143,6 @@ void requests(int *parentPipes, int procID, process process1)
 
             int buffer_sz = 20;
             char buffer[buffer_sz];
-            //cout<<process1.computationTime[procID]<<endl;
             snprintf(buffer ,buffer_sz, "%d,%d" , process1.deadline[procID], process1.computationTime[procID]);
             write(parentPipes[1], buffer, buffer_sz);
             
@@ -236,6 +220,7 @@ int getnextProcLLF(process process)
 int bankers(process process, int next, int requestType, string request)
 {
     
+    int errorCount = 0;
     
     request = request.substr(1);
     int requestVector[process.numResource];
@@ -257,29 +242,84 @@ int bankers(process process, int next, int requestType, string request)
    
         if (requestType == 1)
         {
-            cout<<" request(";
+            cout<<" request "<<endl;
             for(int m = 1; m<process.numResource+1; m++)
             {
-                cout<<requestVector[m]<<",";
+                cout<<requestVector[m]<<" is ";
+                //BANKERS BEGIN
+                if(requestVector[m] > process.need[next][m])
+                {
+                    cout<<"error:   ";
+                    cout<<requestVector[m]<<">"<<process.available[next]<<endl;
+                    errorCount++;
+                }
+                else if(requestVector[m] < process.need[next][m])
+                {
+                    cout<<"wait:    ";
+                    cout<<requestVector[m]<<"<"<<process.need[next][m]<<endl;
+                }
+                else
+                {
+                    cout<<"pretend: ";
+                    cout<<requestVector[m]<<"="<<process.need[next][m]<<endl;
+                    
+                    process.available[next] -= requestVector[m];
+                    process.allocated[next][m]+= requestVector[m];
+                    process.need[next][m] -= requestVector[m];
+                }
+                
             }
-            cout<<")"<<endl;
         }
         else if(requestType == 0)
         {
-            cout<<" release(";
+            cout<<" release "<<endl;
             for(int m = 1; m<process.numResource+1; m++)
             {
-                cout<<requestVector[m]<<",";
+                cout<<requestVector[m]<<" is ";
+                //BANKERS BEGIN
+                if(requestVector[m] > process.need[next][m])
+                {
+                    cout<<"error:   ";
+                    cout<<requestVector[m]<<">"<<process.available[next]<<endl;
+                    errorCount++;
+                }
+                else if(requestVector[m] < process.need[next][m])
+                {
+                    cout<<"wait:    ";
+                    cout<<requestVector[m]<<"<"<<process.need[next][m]<<endl;
+                }
+                else
+                {
+                    cout<<"pretend: ";
+                    cout<<requestVector[m]<<"="<<process.need[next][m]<<endl;
+                    
+                    process.available[next] += requestVector[m];
+                    process.allocated[next][m]-= requestVector[m];
+                    process.need[next][m] += requestVector[m];
+                }
             }
-            cout<<")"<<endl;
         }
-       return 0;
+    if(errorCount>0)
+    {
+        return 1;
+    }
+    else return 0;
 }
 
 void manager(process process, int **childPipes, string schedule)
 {
     printf("parent\n");
     getInfo(process, childPipes);
+    
+    for(int n = 1; n<process.numProcess+1; n++)
+    {
+        for(int m = 1; m<process.numResource+1; m++)
+        {
+            process.need[n][m] = process.max[n][m];
+            cout<<"max["<<n<<"]["<<m<<"]="<<process.need[n][m]<<endl;
+        }
+    }
+    
     while(true)
     {
         if(schedule == "sjf" || schedule == "SJF")
@@ -290,21 +330,27 @@ void manager(process process, int **childPipes, string schedule)
             {
                 return;
             }
-            //cout<<"Smallest process at "<<next<<endl;
             //loop through request from child
             for(int resCount = 1; resCount<process.computationTime[next]+1; resCount++)
             {
                 char request[20];
-                //size_t readSize = read(childPipes[next][0], request, 20);
 
                 read(childPipes[next][0], request, 20);
+                //conversion
                 process.requestType[next][resCount] = atoi(request);
-                //cout<<request<<endl;
-                //cout<<process.requestType[next][resCount]<<",";
                 process.request[next][resCount] = strchr(request, ',')+1;
-                //cout<<process.request[next][resCount];
-                //cout<<endl;
-                bankers(process, next, process.requestType[next][resCount], process.request[next][resCount]);
+                
+                int bankerReturn = bankers(process, next, process.requestType[next][resCount], process.request[next][resCount]);
+                if(bankerReturn == 1)
+                {
+                    cout<<"ERROR"<<endl;
+                }
+                else
+                {
+                    cout<<"NOT ERROR"<<endl;
+                }
+
+                
             }
             process.computationTime[next]=0;
         }
@@ -316,21 +362,25 @@ void manager(process process, int **childPipes, string schedule)
             {
                 return;
             }
-            //cout<<"Smallest process at "<<next<<endl;
             //loop through request from child
             for(int resCount = 1; resCount<process.computationTime[next]+1; resCount++)
             {
                 char request[20];
-                //size_t readSize = read(childPipes[next][0], request, 20);
                 
                 read(childPipes[next][0], request, 20);
+                //conversion
                 process.requestType[next][resCount] = atoi(request);
-                //cout<<request<<endl;
-                //cout<<process.requestType[next][resCount]<<",";
                 process.request[next][resCount] = strchr(request, ',')+1;
-                //cout<<process.request[next][resCount];
-                //cout<<endl;
-                bankers(process, next, process.requestType[next][resCount], process.request[next][resCount]);
+                
+                int bankerReturn = bankers(process, next, process.requestType[next][resCount], process.request[next][resCount]);
+                if(bankerReturn == 1)
+                {
+                    cout<<"ERROR"<<endl;
+                }
+                else
+                {
+                    cout<<"NOT ERROR"<<endl;
+                }
             }
             process.computationTime[next]=0;
             process.deadline[next] = 0;
@@ -369,10 +419,6 @@ int main(int argc, const char * argv[])
         stringstream(line) >> n;
         process1.numProcess = n;
 
-        //cout<<"process1.numResource="<<process1.numResource<<endl;
-        //cout<<"process1.numProcess="<<process1.numProcess<<endl;
-
-
         /* AVAILABLE */
 
         //allocate memory for available
@@ -394,11 +440,14 @@ int main(int argc, const char * argv[])
 
         //allocate memory for max
         process1.max = new int*[process1.numResource+1];
+        process1.need = new int*[process1.numResource+1];
+        process1.allocated = new int*[process1.numResource+1];
         for(int i = 0; i< process1.numProcess+1; i++)
         {
             process1.max[i] = new int(process1.numProcess);
+            process1.need[i] = new int(process1.numProcess);
+            process1.allocated[i] = new int(process1.numProcess);
         }
-
         //feed input to struct **max
 
         for(int n = 1; n<process1.numProcess+1; n++)
@@ -411,7 +460,6 @@ int main(int argc, const char * argv[])
                 getline(myfile.ignore(20, '='),maxLine);
                 stringstream(maxLine) >> tempStringToInt;
                 process1.max[n][m] = tempStringToInt;
-                //cout<<"process1.max["<<n<<"]["<<m<<"]="<<process1.max[n][m]<<endl;
             }
         }
         //allocate memory for deadline
@@ -443,7 +491,7 @@ int main(int argc, const char * argv[])
         pipes[i] = new int(4);
         childPipes[i] = new int(2);
     }
-
+    
     int procID = forkProcess(process1, pipes, childPipes, parentPipes); //return process ID
 
     if(procID > 0)
