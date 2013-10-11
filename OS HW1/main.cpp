@@ -248,7 +248,7 @@ void manager(process process, int **childPipes, string schedule)
                 return;
             }
             
-            for(int resCount = 1; resCount<process.computationTime[next]; resCount++)
+            for(int resCount = 1; resCount<process.computationTime[next]+1; resCount++)
             {
                 char request[20];
                 //size_t readSize = read(childPipes[next][0], request, 20);
