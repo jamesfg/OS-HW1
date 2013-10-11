@@ -190,13 +190,8 @@ void requests(int *parentPipes, int procID, process process1)
 
             convert << process1.deadline[procID];
             string itos = convert.str();
-<<<<<<< HEAD
-            
-            int buffer_sz = 20;
-=======
 
-	    int buffer_sz = 20;
->>>>>>> ca67f87ce3f9e9428e25eb8092bdc888f46e58bf
+            int buffer_sz = 20;
             char buffer[buffer_sz];
             snprintf(buffer ,buffer_sz, "%d", process1.deadline[procID]);
 
@@ -217,15 +212,10 @@ void getInfo(process process, int **childPipes)
         write(childPipes[i][1], "i", 2);
         cout<<"read child pipes"<<endl;
         read(childPipes[i][0], buffer,2);
-<<<<<<< HEAD
-        
-        deadlineFC = atoi(buffer);
-        
-        cout<<deadlineFC<<endl;
-=======
-        cout<<buffer[0]<<buffer[1]<<endl;
 
->>>>>>> ca67f87ce3f9e9428e25eb8092bdc888f46e58bf
+        deadlineFC = atoi(buffer);
+
+        cout<<deadlineFC<<endl;
     }
 }
 
