@@ -191,10 +191,11 @@ void requests(int *parentPipes, int procID, process process1)
             convert << process1.deadline[procID];
             string itos = convert.str();
             
-            char buffer[2];
-            snprintf(buffer ,2, "%d", process1.deadline[procID]);
+	    int buffer_sz = 20;
+            char buffer[buffer_sz];
+            snprintf(buffer ,buffer_sz, "%d", process1.deadline[procID]);
             
-            write(parentPipes[1], buffer, 2);
+            write(parentPipes[1], buffer, buffer_sz);
             
             /* END OF READ FILE */
         }
