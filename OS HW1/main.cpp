@@ -219,28 +219,57 @@ int getnextProcLLF(process process)
     return smallestID;
 }
 
-bool safe(process process, int available, int need, int allocated, int next, int m, int finishCount)
+bool safe(process process)
 {
-    int work = available;
-    if(process.finish[next]==0 && need<=work )
+    int work[process.numResource+1];
+    int finish[process.numProcess+1];
+    for(int m = 1; m<process.numProcess+1; m++)
     {
-        work +=allocated;
-        if(finishCount == process.numResource)
+        work[m] = process.available[m];
+    }
+    for(int i = 1; i<process.numProcess+1; i++)
+    {
+        finish[i]=0;
+    }
+    
+    for(int n = 1; n<process.numProcess+1; n++)
+    {
+        for(int m = 1; m<process.numProcess+1; m++)
         {
-            process.finish[next] = 1;
-            if(process.finish[next] == 1)
+            if(finish[n]==false)
             {
-                return true;
-            }
-            else
-            {
-                return false;
+                if(process.need[n][m]<=work[m])
+                {
+                    work[m]=work[m]+process.allocated[n][m];
+                    finish[n]=true;
+                }
             }
         }
     }
+    for(int i = 1; i<process.numProcess+1; i++)
+    {
+        if(finish[i]==false)
+        {
+            return false;
+        }
+    }
+    return true;
 }
 
-int bankers(process process, int next, int requestType, string request, int finishCount)
+bool compareVector(process process, int *greater, int *smaller)
+{
+    for(int i = 1; i<6; i++)
+    {
+        //cout<<"request "<<greater[i]<<endl;
+        if(greater[i]>=smaller[i])
+        {
+            return false;
+        }
+    }
+    return true;
+}
+
+int bankers(process process, int next, int requestType, string request)
 {
     
     request = request.substr(1);
@@ -254,77 +283,92 @@ int bankers(process process, int next, int requestType, string request, int fini
        
         if (requestType == 1)
         {
-            for(int m = 1; m<process.numResource+1; m++)
-            {
+                int requestNeed = compareVector(process, requestVector, process.need[next]);
+                int requestAvail = compareVector(process,requestVector, process.available);
                 //BANKERS BEGIN
-                if(requestVector[m] > process.need[next][m])
+                if(!requestNeed)
                 {
                     return 1;
                 }
-                else if(requestVector[m] > process.available[next])
+                else if(!requestAvail)
                 {
                     return 2;
                 }
                 else
                 {
-                    int tempAvail = process.available[next];
-                    int tempAlloc = process.allocated[next][m];
-                    int tempNeed = process.need[next][m];
-                    
-//                    
-//                    int safeCheck = safe(process, tempAvail, tempNeed, tempAlloc, next, m, finishCount);
-//                    safeCheck = 1;
-//                    
-//                    if(safeCheck == true)
-//                    {
-                        process.available[next] -= requestVector[m];
-                        process.allocated[next][m]+= requestVector[m];
-                        process.need[next][m] -= requestVector[m];
-//                        return 3;
-//                    }
-//                    else if(safeCheck == false)
-//                    {
-//                        return 2;
-//                    }
+                    int tempAvail[process.numProcess+1];
+                    int tempAlloc[process.numProcess+1];
+                    int tempNeed[process.numProcess+1];
+                    for(int i = 1; i<process.numProcess+1; i++)
+                    {
+                        tempAvail[i]=process.available[i];
+                        tempAlloc[i]=process.allocated[next][i];
+                        tempNeed[i]=process.need[next][i];
+                    }
+                    for(int i = 1; i<process.numProcess+1; i++)
+                    {
+                         
+                        process.available[i]-= requestVector[i];
+                        process.allocated[next][i]+= requestVector[i];
+                        process.need[next][i]-= requestVector[i];
+                    }
+                    bool isSafe = safe(process);
+                    if (isSafe)
+                    {
+                        return 3;
+                    }
+                    else
+                    {
+                        return 2;
+                    }
                 }
-            }
         }
         else if(requestType == 0)
         {
-            for(int m = 1; m<process.numResource+1; m++)
-            {
+                int requestNeed = compareVector(process, requestVector, process.need[next]);
+                int requestAvail = compareVector(process,requestVector, process.available);
                 //BANKERS BEGIN
-                if(requestVector[m] > process.need[next][m])
+                if(requestNeed)
                 {
                     return 1;
                 }
-                else if(requestVector[m] > process.available[next])
+                else if(requestAvail)
                 {
                     return 2;
                 }
                 else
                 {
-                    int tempAvail = process.available[next];
-                    int tempAlloc = process.allocated[next][m];
-                    int tempNeed = process.need[next][m];
-                    
-//                    int safeCheck = safe(process, tempAvail, tempNeed, tempAlloc, next, m, finishCount);
-//                    safeCheck = 1;
-//                    
-//                    if(safeCheck == true)
-//                    {
-                        process.available[next] += requestVector[m];
-                        process.allocated[next][m]-= requestVector[m];
-                        process.need[next][m] += requestVector[m];
-//                        return 3;
-//                    }
-//                    else if(safeCheck == false)
-//                    {
-//                        return 2;
-//                    }
-                    
+                    int tempAvail[process.numProcess+1];
+                    int tempAlloc[process.numProcess+1];
+                    int tempNeed[process.numProcess+1];
+                    for(int i = 1; i<process.numProcess+1; i++)
+                    {
+                        tempAvail[i]=process.available[i];
+                        tempAlloc[i]=process.allocated[next][i];
+                        tempNeed[i]=process.need[next][i];
+                    }
+                    for(int i = 1; i<process.numProcess+1; i++)
+                    {
+                        process.available[i]+= requestVector[i];
+                        process.allocated[next][i]-= requestVector[i];
+                        process.need[next][i]+= requestVector[i];
+                    }
+                    bool isSafe = safe(process);
+                    if (isSafe)
+                    {
+                        return 3;
+                    }
+                    else
+                    {
+                        for(int i = 1; i<process.numProcess+1; i++)
+                        {
+                            process.available[i] =tempAvail[i];
+                            process.allocated[next][i]=tempAlloc[i];
+                            process.need[next][i]=tempNeed[i];
+                        }
+                        return 2;
+                    }
                 }
-            }
         }
     else return 3;
     
@@ -361,18 +405,18 @@ void manager(process process, int **childPipes, string schedule)
             for(int resCount = 1; resCount<process.computationTime[next]+1; resCount++)
             {
                 char request[20];
-
+                
                 read(childPipes[next][0], request, 20);
                 //conversion
                 process.requestType[next][resCount] = atoi(request);
                 process.request[next][resCount] = strchr(request, ',')+1;
                 
-                int finishCount = 0;
+                int bankerReturn = bankers(process, next, process.requestType[next][resCount], process.request[next][resCount]);
                 
-                int bankerReturn = bankers(process, next, process.requestType[next][resCount], process.request[next][resCount], finishCount);
                 if(bankerReturn == 1)
                 {
                     cout<<"REQUEST "<<resCount<<" ERROR"<<endl;
+                    process.deadline[next]--;
                     cout<<"  Available: "<<process.available[next]<<endl;
                     cout<<"  Allocated: "<<process.allocated[next][resCount]<<endl;
                     cout<<"       Need: "<<process.need[next][resCount]<<endl;
@@ -389,15 +433,13 @@ void manager(process process, int **childPipes, string schedule)
                 }
                 else if(bankerReturn == 3)
                 {
-                    cout<<"REQUEST "<<resCount<<" Safe"<<endl;
+                    cout<<"REQUEST "<<resCount<<" Pretend"<<endl;
                     process.deadline[next]--;
                     cout<<"  Available: "<<process.available[next]<<endl;
                     cout<<"  Allocated: "<<process.allocated[next][resCount]<<endl;
                     cout<<"       Need: "<<process.need[next][resCount]<<endl;
                     cout<<"   Deadline: "<<process.deadline[next]<<endl;
                 }
-
-                
             }
             process.computationTime[next]=0;
         }
@@ -412,8 +454,6 @@ void manager(process process, int **childPipes, string schedule)
             
             cout<<"-------PROCESS------- "<<next<<endl;
             
-            int finishCount = 0;
-            
             //loop through request from child
             for(int resCount = 1; resCount<process.computationTime[next]+1; resCount++)
             {
@@ -424,11 +464,12 @@ void manager(process process, int **childPipes, string schedule)
                 process.requestType[next][resCount] = atoi(request);
                 process.request[next][resCount] = strchr(request, ',')+1;
                 
-                int bankerReturn = bankers(process, next, process.requestType[next][resCount], process.request[next][resCount], finishCount);
+                int bankerReturn = bankers(process, next, process.requestType[next][resCount], process.request[next][resCount]);
                 
                 if(bankerReturn == 1)
                 {
                     cout<<"REQUEST "<<resCount<<" ERROR"<<endl;
+                    process.deadline[next]--;
                     cout<<"  Available: "<<process.available[next]<<endl;
                     cout<<"  Allocated: "<<process.allocated[next][resCount]<<endl;
                     cout<<"       Need: "<<process.need[next][resCount]<<endl;
